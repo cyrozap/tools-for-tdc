@@ -25,6 +25,7 @@ from pathlib import Path
 
 from crc32_bzip2 import crc32
 from tdc_compression import decompress
+from tdc_data import parse
 
 try:
     from tdc import Tdc
@@ -46,6 +47,8 @@ def main() -> None:
     compressed_len_total: int = 0
     decompressed_len_total: int = 0
 
+    decompressed_data: bytes = b""
+
     with open(output_filename, "wb") as output:
         tdc_file: Tdc = Tdc.from_file(args.file)
         for block in tdc_file.blocks:
@@ -63,7 +66,12 @@ def main() -> None:
             output.write(decompressed)
             print("Wrote {} decompressed bytes to \"{}\"".format(len(decompressed), output_filename), file=sys.stderr)
 
+            decompressed_data += decompressed
+
         print("Finished writing {} decompressed bytes to \"{}\"".format(decompressed_len_total, output_filename), file=sys.stderr)
+
+        data_ver: int = tdc_file.header.data_version
+        parse(data_ver, decompressed_data)
 
     print("Decompressed {} bytes from {} compressed bytes (compression ratio: {:.02f}%)".format(decompressed_len_total, compressed_len_total, (compressed_len_total*100)/decompressed_len_total), file=sys.stderr)
 

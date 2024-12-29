@@ -17,6 +17,11 @@ It does not yet parse the decompressed data.
 A library containing an implementation of the decompression algorithm described in [../doc/Compression.md](../doc/Compression.md).
 
 
+## [tdc\_data.py](tdc_data.py)
+
+A library for parsing the decompressed data in `.tdc` files.
+
+
 ## [test\_compression.py](test_compression.py) and [test\_crc32.py](test_crc32.py)
 
 Unit tests for the implementations of the decompression algorithm and CRC-32/BZIP2 algorithm, respectively.
