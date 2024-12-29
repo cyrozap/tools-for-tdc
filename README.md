@@ -16,9 +16,11 @@ This project makes no claim to ownership of the proprietary rights (including pa
 
 ## Project Status
 
-The header format of the `.tdc` files is partially understood and documented with [Kaitai Struct][kaitai] in [doc/tdc.ksy](doc/tdc.ksy).
-The format of the compressed capture data in `.tdc` files is (nearly) completely understood, and can be correctly decompressed using the algorithm described in [doc/Compression.md](doc/Compression.md).
-The format of the decompressed data is partly understood, and is described in [doc/Decompressed-Data.md](doc/Decompressed-Data.md).
+Done:
+
+- [x] The header format of the `.tdc` files is partially understood and documented with [Kaitai Struct][kaitai] in [doc/tdc.ksy](doc/tdc.ksy).
+- [x] The format of the compressed capture data in `.tdc` files is (nearly) completely understood, and can be correctly decompressed using the algorithm described in [doc/Compression.md](doc/Compression.md).
+- [x] The format of the decompressed data is partly understood, and is described in [doc/Decompressed-Data.md](doc/Decompressed-Data.md).
 
 To do:
 
