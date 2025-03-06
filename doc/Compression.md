@@ -4,6 +4,9 @@ The data in Total Phase Data Center capture files (ending in `.tdc`) is split in
 The compression algorithm is similar to [LZ77][lz77], since it involves segments of literal data as well as commands to copy data that already exists in the decompression buffer ("backreferences").
 An explanation of the compressed data format and algorithm used to decompress each block follows.
 
+> [!NOTE]
+> Several months after reverse engineering this format, I discovered that this is an open source compression algorithm called [FastLZ][fastlz].
+
 
 ## Overview
 
@@ -102,3 +105,4 @@ See [../tools/test\_compression.py](../tools/test_compression.py) for examples o
 
 
 [lz77]: https://en.wikipedia.org/wiki/LZ77_and_LZ78#LZ77
+[fastlz]: https://github.com/ariya/FastLZ

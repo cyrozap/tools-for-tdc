@@ -19,7 +19,7 @@ This project makes no claim to ownership of the proprietary rights (including pa
 Done:
 
 - [x] The header format of the `.tdc` files is partially understood and documented with [Kaitai Struct][kaitai] in [doc/tdc.ksy](doc/tdc.ksy).
-- [x] The format of the compressed capture data in `.tdc` files is (nearly) completely understood, and can be correctly decompressed using the algorithm described in [doc/Compression.md](doc/Compression.md).
+- [x] The format of the compressed capture data in `.tdc` files is (nearly) completely understood, and can be correctly decompressed using the algorithm described in [doc/Compression.md](doc/Compression.md). The algorithm is [FastLZ][fastlz].
 - [x] The format of the decompressed data is partly understood, and is described in [doc/Decompressed-Data.md](doc/Decompressed-Data.md).
 
 To do:
@@ -41,5 +41,6 @@ Except where stated otherwise:
 [wireshark-export]: https://web.archive.org/web/20241204023125/https://www.totalphase.com/solutions/apps/exporting-captures-wireshark/
 [draw-the-rest-of-the-owl]: https://web.archive.org/web/20101028033817if_/http://29.media.tumblr.com/tumblr_l7iwzq98rU1qa1c9eo1_500.jpg
 [kaitai]: https://kaitai.io/
+[fastlz]: https://github.com/ariya/FastLZ
 [gpl]: COPYING.txt
 [cc-by-sa]: https://creativecommons.org/licenses/by-sa/4.0/
