@@ -6,15 +6,15 @@
 An implementation of the CRC-32/BZIP2 algorithm, which is used in the `.tdc` format to verify decompressed data.
 
 
+## [fastlz.py](fastlz.py)
+
+A library containing an implementation of the decompression algorithm ([FastLZ][fastlz]) described in [../doc/Compression.md](../doc/Compression.md).
+
+
 ## [process.py](process.py)
 
 A demo program to process `.tdc` files. Currently, it only decompressed the data contained in the selected `.tdc` file and writes it to a new file.
 It does not yet parse the decompressed data.
-
-
-## [fastlz.py](fastlz.py)
-
-A library containing an implementation of the decompression algorithm ([FastLZ][fastlz]) described in [../doc/Compression.md](../doc/Compression.md).
 
 
 ## [tdc\_data.py](tdc_data.py)
