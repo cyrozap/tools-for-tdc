@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-# tdc_compression.py - A library for decompressing TPDC capture data
+# fastlz.py - A library for decompressing data compressed with FastLZ
 # Copyright (C) 2024  Forest Crossman <cyrozap@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify

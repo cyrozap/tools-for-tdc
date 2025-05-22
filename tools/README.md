@@ -12,7 +12,7 @@ A demo program to process `.tdc` files. Currently, it only decompressed the data
 It does not yet parse the decompressed data.
 
 
-## [tdc\_compression.py](tdc_compression.py)
+## [fastlz.py](fastlz.py)
 
 A library containing an implementation of the decompression algorithm ([FastLZ][fastlz]) described in [../doc/Compression.md](../doc/Compression.md).
 
@@ -22,9 +22,9 @@ A library containing an implementation of the decompression algorithm ([FastLZ][
 A library for parsing the decompressed data in `.tdc` files.
 
 
-## [test\_compression.py](test_compression.py) and [test\_crc32.py](test_crc32.py)
+## [test\_crc32.py](test_crc32.py) and [test\_fastlz.py](test_fastlz.py)
 
-Unit tests for the implementations of the decompression algorithm and CRC-32/BZIP2 algorithm, respectively.
+Unit tests for the implementations of the CRC-32/BZIP2 algorithm and the [FastLZ][fastlz] decompression algorithm, respectively.
 
 
 [fastlz]: https://github.com/ariya/FastLZ

@@ -17,7 +17,7 @@
 
 import pytest
 
-from tdc_compression import DecompressionError, decompress
+from fastlz import DecompressionError, decompress
 
 
 def test_decompress_0_a() -> None:

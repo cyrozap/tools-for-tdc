@@ -24,7 +24,7 @@ import tempfile
 from pathlib import Path
 
 from crc32_bzip2 import crc32
-from tdc_compression import decompress
+from fastlz import decompress
 from tdc_data import parse
 
 try:
