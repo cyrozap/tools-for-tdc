@@ -243,25 +243,26 @@ def parse(version: int, data_bytes: bytes) -> None:
         # unk: int = header >> 4
         block_type: int = header & 0x0F
 
-        if block_type == 0:
-            b0_size: int = data.take_three_le()
-            b0_block_data: bytes = data.take_n_bytes(b0_size - 4)
-            handle_block_0(version, sample_rate_sps, b0_block_data)
-        elif block_type == 5:
-            b5_block_data: bytes = data.take_n_bytes(37)
-            if version >= 0x0103:
-                b5_block_data += data.take_n_bytes(4)
-            if version >= 0x0104:
-                b5_block_data += data.take_n_bytes(1)
-            if version >= 0x0108:
-                b5_block_data += data.take_n_bytes(1)
-            if version >= 0x010A:
-                b5_block_data += data.take_n_bytes(1)
-            sample_rate_sps = handle_block_5(version, b5_block_data)
-        elif block_type == 6:
-            protocol: int = data.take_four_le()
-            b6_size: int = data.take_four_le()
-            b6_block_data: bytes = data.take_n_bytes(b6_size)
-            handle_block_6(protocol, b6_block_data)
-        else:
-            raise ParserError("Unsupported block type: {:#03x} at index {}".format(block_type, data.get_index()))
+        match block_type:
+            case 0:
+                b0_size: int = data.take_three_le()
+                b0_block_data: bytes = data.take_n_bytes(b0_size - 4)
+                handle_block_0(version, sample_rate_sps, b0_block_data)
+            case 5:
+                b5_block_data: bytes = data.take_n_bytes(37)
+                if version >= 0x0103:
+                    b5_block_data += data.take_n_bytes(4)
+                if version >= 0x0104:
+                    b5_block_data += data.take_n_bytes(1)
+                if version >= 0x0108:
+                    b5_block_data += data.take_n_bytes(1)
+                if version >= 0x010A:
+                    b5_block_data += data.take_n_bytes(1)
+                sample_rate_sps = handle_block_5(version, b5_block_data)
+            case 6:
+                protocol: int = data.take_four_le()
+                b6_size: int = data.take_four_le()
+                b6_block_data: bytes = data.take_n_bytes(b6_size)
+                handle_block_6(protocol, b6_block_data)
+            case _:
+                raise ParserError("Unsupported block type: {:#03x} at index {}".format(block_type, data.get_index()))
