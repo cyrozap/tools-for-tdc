@@ -42,46 +42,8 @@ class Data:
     def get_remaining(self) -> int:
         return len(self._data) - self.get_index()
 
-    def take_one(self) -> int:
-        if self.get_remaining() < 1:
-            raise ParserError("Compressed data incomplete at index {}: Requested {}, but only {} remaining".format(self.get_index(), 1, self.get_remaining()))
-
-        value: int = self._data[self.get_index()]
-        self.inc_index()
-        return value
-
-    def take_two_le(self) -> int:
-        if self.get_remaining() < 2:
-            raise ParserError("Compressed data incomplete at index {}: Requested {}, but only {} remaining".format(self.get_index(), 2, self.get_remaining()))
-
-        value: int = self.take_one()
-        value += self.take_one() << 8
-        return value
-
-    def take_three_le(self) -> int:
-        if self.get_remaining() < 3:
-            raise ParserError("Compressed data incomplete at index {}: Requested {}, but only {} remaining".format(self.get_index(), 3, self.get_remaining()))
-
-        value: int = self.take_one()
-        value += self.take_one() << 8
-        value += self.take_one() << 16
-        return value
-
-    def take_four_le(self) -> int:
-        if self.get_remaining() < 4:
-            raise ParserError("Compressed data incomplete at index {}: Requested {}, but only {} remaining".format(self.get_index(), 4, self.get_remaining()))
-
-        value: int = self.take_two_le()
-        value += self.take_two_le() << 16
-        return value
-
-    def take_eight_le(self) -> int:
-        if self.get_remaining() < 8:
-            raise ParserError("Compressed data incomplete at index {}: Requested {}, but only {} remaining".format(self.get_index(), 8, self.get_remaining()))
-
-        value: int = self.take_four_le()
-        value += self.take_four_le() << 32
-        return value
+    def take_le(self, count: int) -> int:
+        return int.from_bytes(self.take_n_bytes(count), byteorder="little")
 
     def take_n_bytes(self, count: int) -> bytes:
         if count < 0:
@@ -96,9 +58,7 @@ class Data:
 
     def take_remaining_bytes(self) -> bytes:
         count: int = self.get_remaining()
-        value: bytes = self._data[self.get_index():self.get_index()+count]
-        self.inc_index(count)
-        return value
+        return self.take_n_bytes(count)
 
 class TVRecord(NamedTuple):
     tag: int
@@ -130,13 +90,13 @@ def format_timestamp(nanoseconds: int) -> str:
 def handle_block_0(version: int, sample_rate_sps: int | None, data_bytes: bytes) -> None:
     data = Data(data_bytes)
 
-    index: int = data.take_four_le()
-    unk2: int = data.take_two_le()
+    index: int = data.take_le(4)
+    unk2: int = data.take_le(2)
 
     records: list[TVRecord] = []
     while data.get_remaining():
-        tag: int = data.take_two_le()
-        size: int = data.take_four_le() - 6
+        tag: int = data.take_le(2)
+        size: int = data.take_le(4) - 6
         value: bytes = data.take_n_bytes(size)
         records.append(TVRecord(tag, value))
 
@@ -177,15 +137,15 @@ def handle_block_0(version: int, sample_rate_sps: int | None, data_bytes: bytes)
 def handle_block_5(version: int, data_bytes: bytes) -> int:
     data = Data(data_bytes)
 
-    unk1: int = data.take_four_le()
-    unk2: int = data.take_four_le()
-    capture_start_time: int = data.take_four_le()
-    capture_end_time: int = data.take_four_le()
-    capture_samples: int = data.take_eight_le()
-    sample_rate_sps: int = data.take_four_le()
-    unk7: int = data.take_one()
-    unk8: int = data.take_four_le()
-    unk9: int = data.take_four_le()
+    unk1: int = data.take_le(4)
+    unk2: int = data.take_le(4)
+    capture_start_time: int = data.take_le(4)
+    capture_end_time: int = data.take_le(4)
+    capture_samples: int = data.take_le(8)
+    sample_rate_sps: int = data.take_le(4)
+    unk7: int = data.take_le(1)
+    unk8: int = data.take_le(4)
+    unk9: int = data.take_le(4)
 
     info: str = "Block 5"
     info += f": Unk1: {unk1:#010x}"
@@ -199,16 +159,16 @@ def handle_block_5(version: int, data_bytes: bytes) -> int:
     info += f", Unk9: {unk9:#010x}"
 
     if version >= 0x0103:
-        unk10 = data.take_four_le()
+        unk10 = data.take_le(4)
         info += f", Unk10: {unk10:#010x}"
     if version >= 0x0104:
-        unk11 = data.take_one()
+        unk11 = data.take_le(1)
         info += f", Unk11: {unk11:#04x}"
     if version >= 0x0108:
-        unk12 = data.take_one()
+        unk12 = data.take_le(1)
         info += f", Unk12: {unk12:#04x}"
     if version >= 0x010A:
-        unk13 = data.take_one()
+        unk13 = data.take_le(1)
         info += f", Unk13: {unk13:#04x}"
 
     remaining_bytes = data.take_remaining_bytes()
@@ -239,13 +199,13 @@ def parse(version: int, data_bytes: bytes) -> None:
     sample_rate_sps: int | None = None
     data = Data(data_bytes)
     while data.get_remaining() > 0:
-        header: int = data.take_one()
+        header: int = data.take_le(1)
         # unk: int = header >> 4
         block_type: int = header & 0x0F
 
         match block_type:
             case 0:
-                b0_size: int = data.take_three_le()
+                b0_size: int = data.take_le(3)
                 b0_block_data: bytes = data.take_n_bytes(b0_size - 4)
                 handle_block_0(version, sample_rate_sps, b0_block_data)
             case 5:
@@ -260,8 +220,8 @@ def parse(version: int, data_bytes: bytes) -> None:
                     b5_block_data += data.take_n_bytes(1)
                 sample_rate_sps = handle_block_5(version, b5_block_data)
             case 6:
-                protocol: int = data.take_four_le()
-                b6_size: int = data.take_four_le()
+                protocol: int = data.take_le(4)
+                b6_size: int = data.take_le(4)
                 b6_block_data: bytes = data.take_n_bytes(b6_size)
                 handle_block_6(protocol, b6_block_data)
             case _:
