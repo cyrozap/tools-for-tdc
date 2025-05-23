@@ -43,9 +43,9 @@ class Data:
         return len(self._data) - self.get_index()
 
     def take_le(self, count: int) -> int:
-        return int.from_bytes(self.take_n_bytes(count), byteorder="little")
+        return int.from_bytes(self.take_bytes(count), byteorder="little")
 
-    def take_n_bytes(self, count: int) -> bytes:
+    def take_bytes(self, count: int) -> bytes:
         if count < 0:
             raise ParserError("Cannot request {} bytes--length must be positive".format(count))
 
@@ -58,7 +58,7 @@ class Data:
 
     def take_remaining_bytes(self) -> bytes:
         count: int = self.get_remaining()
-        return self.take_n_bytes(count)
+        return self.take_bytes(count)
 
 class TVRecord(NamedTuple):
     tag: int
@@ -97,7 +97,7 @@ def handle_block_0(version: int, sample_rate_sps: int | None, data_bytes: bytes)
     while data.get_remaining():
         tag: int = data.take_le(2)
         size: int = data.take_le(4) - 6
-        value: bytes = data.take_n_bytes(size)
+        value: bytes = data.take_bytes(size)
         records.append(TVRecord(tag, value))
 
     remaining: bytes = data.take_remaining_bytes()
@@ -206,23 +206,23 @@ def parse(version: int, data_bytes: bytes) -> None:
         match block_type:
             case 0:
                 b0_size: int = data.take_le(3)
-                b0_block_data: bytes = data.take_n_bytes(b0_size - 4)
+                b0_block_data: bytes = data.take_bytes(b0_size - 4)
                 handle_block_0(version, sample_rate_sps, b0_block_data)
             case 5:
-                b5_block_data: bytes = data.take_n_bytes(37)
+                b5_block_data: bytes = data.take_bytes(37)
                 if version >= 0x0103:
-                    b5_block_data += data.take_n_bytes(4)
+                    b5_block_data += data.take_bytes(4)
                 if version >= 0x0104:
-                    b5_block_data += data.take_n_bytes(1)
+                    b5_block_data += data.take_bytes(1)
                 if version >= 0x0108:
-                    b5_block_data += data.take_n_bytes(1)
+                    b5_block_data += data.take_bytes(1)
                 if version >= 0x010A:
-                    b5_block_data += data.take_n_bytes(1)
+                    b5_block_data += data.take_bytes(1)
                 sample_rate_sps = handle_block_5(version, b5_block_data)
             case 6:
                 protocol: int = data.take_le(4)
                 b6_size: int = data.take_le(4)
-                b6_block_data: bytes = data.take_n_bytes(b6_size)
+                b6_block_data: bytes = data.take_bytes(b6_size)
                 handle_block_6(protocol, b6_block_data)
             case _:
                 raise ParserError("Unsupported block type: {:#03x} at index {}".format(block_type, data.get_index()))
