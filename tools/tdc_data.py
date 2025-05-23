@@ -151,21 +151,22 @@ def handle_block_0(version: int, sample_rate_sps: int | None, data_bytes: bytes)
         info += f"(Tag: {record.tag:#06x}"
         if record.value:
             info += ", Value: "
-            if record.tag == 0x0000:
-                assert len(record.value) == 14
-                unk5, timestamp_samples, length_samples = struct.unpack("<HQI", record.value)
-                info += f"(Unk5: {unk5:#06x}"
-                if sample_rate_sps is not None:
-                    timestamp_ns: int = (timestamp_samples * 1_000_000_000) // sample_rate_sps
-                    length_ns: int = (length_samples * 1_000_000_000) // sample_rate_sps
-                    info += f", Timestamp: {format_timestamp(timestamp_ns)}"
-                    info += f", Length: {format_timestamp(length_ns)}"
-                else:
-                    info += ", Timestamp: Unknown"
-                    info += ", Length: Unknown"
-                info += ")"
-            else:
-                info += record.value.hex()
+            match record.tag:
+                case 0x0000:
+                    assert len(record.value) == 14
+                    unk5, timestamp_samples, length_samples = struct.unpack("<HQI", record.value)
+                    info += f"(Unk5: {unk5:#06x}"
+                    if sample_rate_sps is not None:
+                        timestamp_ns: int = (timestamp_samples * 1_000_000_000) // sample_rate_sps
+                        length_ns: int = (length_samples * 1_000_000_000) // sample_rate_sps
+                        info += f", Timestamp: {format_timestamp(timestamp_ns)}"
+                        info += f", Length: {format_timestamp(length_ns)}"
+                    else:
+                        info += ", Timestamp: Unknown"
+                        info += ", Length: Unknown"
+                    info += ")"
+                case _:
+                    info += record.value.hex()
         info += ")"
         if i < len(records) - 1:
             info += ", "
