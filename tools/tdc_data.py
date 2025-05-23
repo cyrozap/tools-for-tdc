@@ -50,7 +50,7 @@ class Data:
             raise ParserError("Cannot request {} bytes--length must be positive".format(count))
 
         if self.get_remaining() < count:
-            raise ParserError("Compressed data incomplete at index {}: Requested {}, but only {} remaining".format(self.get_index(), count, self.get_remaining()))
+            raise ParserError("Data incomplete at index {}: Requested {}, but only {} remaining".format(self.get_index(), count, self.get_remaining()))
 
         value: bytes = self._data[self.get_index():self.get_index()+count]
         self.inc_index(count)
