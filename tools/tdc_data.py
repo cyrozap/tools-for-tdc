@@ -19,6 +19,7 @@
 
 import struct
 from datetime import datetime, timezone
+from typing import NamedTuple
 
 
 class ParserError(Exception):
@@ -99,6 +100,10 @@ class Data:
         self.inc_index(count)
         return value
 
+class TVRecord(NamedTuple):
+    tag: int
+    value: bytes
+
 
 def format_timestamp(nanoseconds: int) -> str:
     # Convert nanoseconds to total seconds
@@ -128,12 +133,12 @@ def handle_block_0(version: int, sample_rate_sps: int | None, data_bytes: bytes)
     index: int = data.take_four_le()
     unk2: int = data.take_two_le()
 
-    records: list[tuple[int, bytes]] = []
+    records: list[TVRecord] = []
     while data.get_remaining():
         tag: int = data.take_two_le()
         size: int = data.take_four_le() - 6
         value: bytes = data.take_n_bytes(size)
-        records.append((tag, value))
+        records.append(TVRecord(tag, value))
 
     remaining: bytes = data.take_remaining_bytes()
     assert len(remaining) == 0
@@ -142,13 +147,13 @@ def handle_block_0(version: int, sample_rate_sps: int | None, data_bytes: bytes)
     info += f": Index: {index}"
     info += f", Unk2: {unk2:#06x}"
     info += ", Records: ["
-    for i, (tag, value) in enumerate(records):
-        info += f"(Tag: {tag:#06x}"
-        if value:
+    for i, record in enumerate(records):
+        info += f"(Tag: {record.tag:#06x}"
+        if record.value:
             info += ", Value: "
-            if tag == 0x0000:
-                assert len(value) == 14
-                unk5, timestamp_samples, length_samples = struct.unpack("<HQI", value)
+            if record.tag == 0x0000:
+                assert len(record.value) == 14
+                unk5, timestamp_samples, length_samples = struct.unpack("<HQI", record.value)
                 info += f"(Unk5: {unk5:#06x}"
                 if sample_rate_sps is not None:
                     timestamp_ns: int = (timestamp_samples * 1_000_000_000) // sample_rate_sps
@@ -160,7 +165,7 @@ def handle_block_0(version: int, sample_rate_sps: int | None, data_bytes: bytes)
                     info += ", Length: Unknown"
                 info += ")"
             else:
-                info += value.hex()
+                info += record.value.hex()
         info += ")"
         if i < len(records) - 1:
             info += ", "
