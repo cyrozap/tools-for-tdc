@@ -125,6 +125,28 @@ def handle_block_0(version: int, sample_rate_sps: int | None, data_bytes: bytes)
                         info += ", Timestamp: Unknown"
                         info += ", Length: Unknown"
                     info += ")"
+                case 0x0300:
+                    unk_0300: int = struct.unpack("<I", record.value)[0]
+                    info += f"{unk_0300:#010x}"
+                    dir_down: bool = unk_0300 & 0x01 != 0
+                    dir_up: bool = unk_0300 & 0x02 != 0
+                    is_ss: bool = unk_0300 & 0x04 != 0
+                    dir_str: str = ""
+                    match (dir_up, dir_down):
+                        case (False, True):
+                            dir_str = "↓"
+                        case (True, False):
+                            dir_str = "↑"
+                        case (True, True):
+                            dir_str = "↕"
+                        case _:
+                            dir_str = ""
+                    sp_str: str = "FS"
+                    if is_ss:
+                        sp_str = "SS"
+                    sp_dir_str: str = ""
+                    if unk_0300 & 0b111:
+                        info += f" ({sp_str + dir_str})"
                 case _:
                     info += record.value.hex()
         info += ")"
