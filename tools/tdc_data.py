@@ -144,7 +144,6 @@ def handle_block_0(version: int, sample_rate_sps: int | None, data_bytes: bytes)
                     sp_str: str = "FS"
                     if is_ss:
                         sp_str = "SS"
-                    sp_dir_str: str = ""
                     if unk_0300 & 0b111:
                         info += f" ({sp_str + dir_str})"
                 case _:
