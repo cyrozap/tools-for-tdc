@@ -87,6 +87,21 @@ def format_timestamp(nanoseconds: int) -> str:
 
     return formatted_time
 
+def format_time_samples(samples: int, sample_rate_sps: int | None) -> str:
+    """
+    Convert samples and sample rate to a timestamp/duration string.
+
+    :param samples: The sample count you want to convert to a timestamp/duration.
+    :param sample_rate_sps: The sample rate, in samples per second, or None.
+    :return: The formatted timestamp/duration string, or "Unknown" if no sample rate was provided.
+    """
+
+    if sample_rate_sps is None:
+        return "Unknown"
+
+    ns = (samples * 1_000_000_000) // sample_rate_sps
+    return format_timestamp(ns)
+
 def handle_block_0(version: int, sample_rate_sps: int | None, data_bytes: bytes) -> None:
     data = Data(data_bytes)
 
@@ -116,14 +131,8 @@ def handle_block_0(version: int, sample_rate_sps: int | None, data_bytes: bytes)
                     assert len(record.value) == 14
                     unk5, timestamp_samples, length_samples = struct.unpack("<HQI", record.value)
                     info += f"(Unk5: {unk5:#06x}"
-                    if sample_rate_sps is not None:
-                        timestamp_ns: int = (timestamp_samples * 1_000_000_000) // sample_rate_sps
-                        length_ns: int = (length_samples * 1_000_000_000) // sample_rate_sps
-                        info += f", Timestamp: {format_timestamp(timestamp_ns)}"
-                        info += f", Length: {format_timestamp(length_ns)}"
-                    else:
-                        info += ", Timestamp: Unknown"
-                        info += ", Length: Unknown"
+                    info += f", Timestamp: {format_time_samples(timestamp_samples, sample_rate_sps)}"
+                    info += f", Length: {format_time_samples(length_samples, sample_rate_sps)}"
                     info += ")"
                 case 0x0300:
                     unk_0300: int = struct.unpack("<I", record.value)[0]
