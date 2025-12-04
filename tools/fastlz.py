@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 # fastlz.py - A library for decompressing data compressed with FastLZ
-# Copyright (C) 2024  Forest Crossman <cyrozap@gmail.com>
+# Copyright (C) 2024-2025  Forest Crossman <cyrozap@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -187,3 +187,20 @@ def decompress(compressed_bytes: bytes) -> bytes:
         raise DecompressionError("Encountered error at compressed index {}: {}".format(compressed.get_index(), exc))
 
     return bytes(decompressed)
+
+def compress(data: bytes) -> bytes:
+    """
+    Generate a "compressed" version of the data using only literal blocks.
+
+    :param data: The input data to compress.
+    :return: The compressed data.
+    """
+    compressed: bytearray = bytearray()
+    i: int = 0
+    while i < len(data):
+        chunk_size: int = min(32, len(data) - i)
+        control_byte: int = chunk_size - 1  # 0b000xxxxx
+        compressed.append(control_byte)
+        compressed.extend(data[i:i + chunk_size])
+        i += chunk_size
+    return bytes(compressed)

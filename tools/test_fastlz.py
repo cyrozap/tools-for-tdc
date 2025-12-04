@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: 0BSD
 
-# Copyright (C) 2024 by Forest Crossman <cyrozap@gmail.com>
+# Copyright (C) 2024-2025 by Forest Crossman <cyrozap@gmail.com>
 #
 # Permission to use, copy, modify, and/or distribute this software for
 # any purpose with or without fee is hereby granted.
@@ -17,7 +17,7 @@
 
 import pytest
 
-from fastlz import DecompressionError, decompress
+from fastlz import DecompressionError, compress, decompress
 
 
 def test_decompress_0_a() -> None:
@@ -103,3 +103,10 @@ def test_decompress_error_e() -> None:
     """lookback_n_take_m_bytes"""
     with pytest.raises(DecompressionError):
         decompress(bytes.fromhex("00002001"))
+
+def test_compress() -> None:
+    import os
+    random_data: bytes = os.urandom(16384)
+    compressed_data: bytes = compress(random_data)
+    decompressed_data: bytes = decompress(compressed_data)
+    assert random_data == decompressed_data
