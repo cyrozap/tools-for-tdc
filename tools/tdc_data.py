@@ -118,27 +118,21 @@ def record_0300_handler(value: bytes, sample_rate_sps: int | None) -> str:
     unk_0300: int = struct.unpack("<I", value)[0]
 
     info: str = f"{unk_0300:#010x}"
-    dir_down: bool = unk_0300 & 0x01 != 0
-    dir_up: bool = unk_0300 & 0x02 != 0
-    is_ss: bool = unk_0300 & 0x04 != 0
 
-    dir_str: str = ""
-    match (dir_up, dir_down):
-        case (False, True):
-            dir_str = "↓"
-        case (True, False):
-            dir_str = "↑"
-        case (True, True):
-            dir_str = "↕"
-        case _:
-            dir_str = ""
+    speed_idx: int = unk_0300 & 0x07
+    speed_str: str = {
+        0: "",
+        1: "LS↕",
+        2: "LF↕",
+        3: "FS↕",
+        4: "HS↕",
+        5: "SS↓",
+        6: "SS↑",
+        7: "SS↕",
+    }.get(speed_idx, "")
 
-    sp_str: str = "FS"
-    if is_ss:
-        sp_str = "SS"
-
-    if unk_0300 & 0b111:
-        info += f" ({sp_str + dir_str})"
+    if speed_str:
+        info += f" ({speed_str})"
 
     return info
 
