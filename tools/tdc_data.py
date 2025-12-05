@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 # tdc_data.py - A library for parsing decompressed TPDC capture data
-# Copyright (C) 2024  Forest Crossman <cyrozap@gmail.com>
+# Copyright (C) 2024-2025  Forest Crossman <cyrozap@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -155,6 +155,38 @@ def handle_block_0(version: int, sample_rate_sps: int | None, data_bytes: bytes)
                         sp_str = "SS"
                     if unk_0300 & 0b111:
                         info += f" ({sp_str + dir_str})"
+                case 0x033a:
+                    # LTSSM Transition
+                    assert len(record.value) == 2
+                    prev_state: int = record.value[0]
+                    new_state: int = record.value[1]
+                    states: dict[int, str] = {
+                        0x00: "Unknown",
+                        0x01: "SS.Disabled",
+                        0x02: "SS.Inactive",
+                        0x03: "RX Detect.Reset",
+                        0x04: "RX Detect.Active",
+                        0x05: "Polling.LFPS",
+                        0x06: "Polling.RxEq",
+                        0x07: "Polling.Active",
+                        0x08: "Polling.Config",
+                        0x09: "Polling.Idle",
+                        0x0a: "U0",
+                        0x0b: "U1",
+                        0x0c: "U2",
+                        0x0d: "U3",
+                        0x0e: "Recovery.Active",
+                        0x0f: "Recovery.Config",
+                        0x10: "Recovery.Idle",
+                        0x11: "Hot Reset.Active",
+                        0x12: "Hot Reset.Exit",
+                        0x13: "Loopback.Active",
+                        0x14: "Loopback.Exit",
+                        0x15: "Compliance",
+                    }
+                    prev_state_str: str = states.get(prev_state, f"0x{prev_state:02X}")
+                    new_state_str: str = states.get(new_state, f"0x{new_state:02X}")
+                    info += f"{record.value.hex()} ({prev_state_str} -> {new_state_str})"
                 case _:
                     info += record.value.hex()
         info += ")"
