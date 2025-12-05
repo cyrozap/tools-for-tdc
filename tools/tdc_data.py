@@ -102,76 +102,96 @@ def format_time_samples(samples: int, sample_rate_sps: int | None) -> str:
     ns = (samples * 1_000_000_000) // sample_rate_sps
     return format_timestamp(ns)
 
-def handle_block_0_record(record: TVRecord, sample_rate_sps: int | None) -> str:
-    info: str = f"(Tag: {record.tag:#06x}"
-    if record.value:
-        info += ", Value: "
-        match record.tag:
-            case 0x0000:
-                assert len(record.value) == 14
-                unk5, timestamp_samples, length_samples = struct.unpack("<HQI", record.value)
-                info += f"(Unk5: {unk5:#06x}"
-                info += f", Timestamp: {format_time_samples(timestamp_samples, sample_rate_sps)}"
-                info += f", Length: {format_time_samples(length_samples, sample_rate_sps)}"
-                info += ")"
-            case 0x0300:
-                unk_0300: int = struct.unpack("<I", record.value)[0]
-                info += f"{unk_0300:#010x}"
-                dir_down: bool = unk_0300 & 0x01 != 0
-                dir_up: bool = unk_0300 & 0x02 != 0
-                is_ss: bool = unk_0300 & 0x04 != 0
-                dir_str: str = ""
-                match (dir_up, dir_down):
-                    case (False, True):
-                        dir_str = "↓"
-                    case (True, False):
-                        dir_str = "↑"
-                    case (True, True):
-                        dir_str = "↕"
-                    case _:
-                        dir_str = ""
-                sp_str: str = "FS"
-                if is_ss:
-                    sp_str = "SS"
-                if unk_0300 & 0b111:
-                    info += f" ({sp_str + dir_str})"
-            case 0x033a:
-                # LTSSM Transition
-                assert len(record.value) == 2
-                prev_state: int = record.value[0]
-                new_state: int = record.value[1]
-                states: dict[int, str] = {
-                    0x00: "Unknown",
-                    0x01: "SS.Disabled",
-                    0x02: "SS.Inactive",
-                    0x03: "RX Detect.Reset",
-                    0x04: "RX Detect.Active",
-                    0x05: "Polling.LFPS",
-                    0x06: "Polling.RxEq",
-                    0x07: "Polling.Active",
-                    0x08: "Polling.Config",
-                    0x09: "Polling.Idle",
-                    0x0a: "U0",
-                    0x0b: "U1",
-                    0x0c: "U2",
-                    0x0d: "U3",
-                    0x0e: "Recovery.Active",
-                    0x0f: "Recovery.Config",
-                    0x10: "Recovery.Idle",
-                    0x11: "Hot Reset.Active",
-                    0x12: "Hot Reset.Exit",
-                    0x13: "Loopback.Active",
-                    0x14: "Loopback.Exit",
-                    0x15: "Compliance",
-                }
-                prev_state_str: str = states.get(prev_state, f"0x{prev_state:02X}")
-                new_state_str: str = states.get(new_state, f"0x{new_state:02X}")
-                info += f"{record.value.hex()} ({prev_state_str} -> {new_state_str})"
-            case _:
-                info += record.value.hex()
+def record_0000_handler(value: bytes, sample_rate_sps: int | None) -> str:
+    assert len(value) == 14
+
+    unk5, timestamp_samples, length_samples = struct.unpack("<HQI", value)
+
+    info: str = f"(Unk5: {unk5:#06x}"
+    info += f", Timestamp: {format_time_samples(timestamp_samples, sample_rate_sps)}"
+    info += f", Length: {format_time_samples(length_samples, sample_rate_sps)}"
     info += ")"
 
     return info
+
+def record_0300_handler(value: bytes, sample_rate_sps: int | None) -> str:
+    unk_0300: int = struct.unpack("<I", value)[0]
+
+    info: str = f"{unk_0300:#010x}"
+    dir_down: bool = unk_0300 & 0x01 != 0
+    dir_up: bool = unk_0300 & 0x02 != 0
+    is_ss: bool = unk_0300 & 0x04 != 0
+
+    dir_str: str = ""
+    match (dir_up, dir_down):
+        case (False, True):
+            dir_str = "↓"
+        case (True, False):
+            dir_str = "↑"
+        case (True, True):
+            dir_str = "↕"
+        case _:
+            dir_str = ""
+
+    sp_str: str = "FS"
+    if is_ss:
+        sp_str = "SS"
+
+    if unk_0300 & 0b111:
+        info += f" ({sp_str + dir_str})"
+
+    return info
+
+def record_033a_handler(value: bytes, sample_rate_sps: int | None) -> str:
+    # LTSSM Transition
+    assert len(value) == 2
+    prev_state: int = value[0]
+    new_state: int = value[1]
+    states: dict[int, str] = {
+        0x00: "Unknown",
+        0x01: "SS.Disabled",
+        0x02: "SS.Inactive",
+        0x03: "RX Detect.Reset",
+        0x04: "RX Detect.Active",
+        0x05: "Polling.LFPS",
+        0x06: "Polling.RxEq",
+        0x07: "Polling.Active",
+        0x08: "Polling.Config",
+        0x09: "Polling.Idle",
+        0x0a: "U0",
+        0x0b: "U1",
+        0x0c: "U2",
+        0x0d: "U3",
+        0x0e: "Recovery.Active",
+        0x0f: "Recovery.Config",
+        0x10: "Recovery.Idle",
+        0x11: "Hot Reset.Active",
+        0x12: "Hot Reset.Exit",
+        0x13: "Loopback.Active",
+        0x14: "Loopback.Exit",
+        0x15: "Compliance",
+    }
+    prev_state_str: str = states.get(prev_state, f"0x{prev_state:02X}")
+    new_state_str: str = states.get(new_state, f"0x{new_state:02X}")
+    return f"{value.hex()} ({prev_state_str} -> {new_state_str})"
+
+def record_default_handler(value: bytes, sample_rate_sps: int | None) -> str:
+    return value.hex()
+
+def handle_block_0_record(record: TVRecord, sample_rate_sps: int | None) -> str:
+    info: str = f"(Tag: {record.tag:#06x}"
+    if not record.value:
+        return info + ")"
+
+    handlers: dict = {
+        0x0000: record_0000_handler,
+        0x0300: record_0300_handler,
+        0x033a: record_033a_handler,
+    }
+    handler = handlers.get(record.tag, record_default_handler)
+    formatted_value: str = handler(record.value, sample_rate_sps)
+
+    return info + f", Value: {formatted_value})"
 
 def handle_block_0(version: int, sample_rate_sps: int | None, data_bytes: bytes) -> None:
     data = Data(data_bytes)
