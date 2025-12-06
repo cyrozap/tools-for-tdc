@@ -17,6 +17,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+import math
 import struct
 from datetime import datetime, timezone
 from typing import NamedTuple
@@ -136,6 +137,48 @@ def record_0300_handler(value: bytes, sample_rate_sps: int | None) -> str:
 
     return info
 
+def record_031a_handler(value: bytes, sample_rate_sps: int | None) -> str:
+    assert len(value) >= 4 + 1 + 1
+
+    data: Data = Data(value)
+
+    symbol_count: int = data.take_le(4)
+    kd_byte_count: int = math.ceil(symbol_count / 8)
+
+    assert 4 + symbol_count + kd_byte_count == len(value)
+
+    symbols: bytes = data.take_bytes(symbol_count)
+    kd_info: bytes = data.take_bytes(kd_byte_count)
+
+    assert data.get_remaining() == 0
+
+    return f"{symbols.hex()}, {kd_info.hex()}"
+
+def record_031b_handler(value: bytes, sample_rate_sps: int | None) -> str:
+    assert len(value) >= 4 + 20 + 3
+
+    data: Data = Data(value)
+
+    unk0: int = data.take_le(4)
+    symbols: bytes = data.take_bytes(20)
+    kd_info: bytes = data.take_bytes(3)
+
+    assert data.get_remaining() == 0
+
+    return f"{unk0:#010x}, {symbols.hex()}, {kd_info.hex()}"
+
+def record_031c_handler(value: bytes, sample_rate_sps: int | None) -> str:
+    assert len(value) >= 8 + 1
+
+    data: Data = Data(value)
+
+    symbols: bytes = data.take_bytes(8)
+    kd_info: bytes = data.take_bytes(1)
+
+    assert data.get_remaining() == 0
+
+    return f"{symbols.hex()}, {kd_info.hex()}"
+
 def record_033a_handler(value: bytes, sample_rate_sps: int | None) -> str:
     # LTSSM Transition
     assert len(value) == 2
@@ -180,6 +223,9 @@ def handle_block_0_record(record: TVRecord, sample_rate_sps: int | None) -> str:
     handlers: dict = {
         0x0000: record_0000_handler,
         0x0300: record_0300_handler,
+        0x031a: record_031a_handler,
+        0x031b: record_031b_handler,
+        0x031c: record_031c_handler,
         0x033a: record_033a_handler,
     }
     handler = handlers.get(record.tag, record_default_handler)
