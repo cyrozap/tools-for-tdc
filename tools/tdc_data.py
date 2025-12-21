@@ -137,6 +137,42 @@ def record_0300_handler(value: bytes, sample_rate_sps: int | None) -> str:
 
     return info
 
+def record_030f_handler(value: bytes, sample_rate_sps: int | None) -> str:
+    assert len(value) == 5
+
+    event_idx: int = value[0]
+
+    info: str = f"{value.hex()}"
+
+    event_str: str = {
+        0x00: "Reset / Keep-alive / Target disconnected",
+        0x01: "Reset / Target disconnected",
+        0x02: "Reset / Keep-alive / Chirp K / Tiny K",
+        0x03: "Reset / Keep-alive",
+        0x04: "Reset / Chirp J / Tiny J",
+        0x05: "Reset / Chirp K / Tiny K",
+        0x06: "Reset",
+        0x07: "Host disconnected",
+        0x08: "Host connected",
+        0x09: "Unreset / Target connected",
+        0x0a: "Low-speed",
+        0x0b: "Full-speed",
+        0x0c: "HNP / Full-speed",
+        0x0d: "High-speed",
+        0x0e: "Suspend",
+        0x0f: "Resume",
+        0x10: "SRP data-line pulse",
+        0x11: "SRP Vbus pulse",
+        0x12: "HNP + Full-speed",
+        0x13: "Chirp K",
+        0x14: "Chirp J",
+    }.get(event_idx, "")
+
+    if event_str:
+        info += f" ({event_str})"
+
+    return info
+
 def record_031a_handler(value: bytes, sample_rate_sps: int | None) -> str:
     assert len(value) >= 4 + 1 + 1
 
@@ -223,6 +259,7 @@ def handle_block_0_record(record: TVRecord, sample_rate_sps: int | None) -> str:
     handlers: dict = {
         0x0000: record_0000_handler,
         0x0300: record_0300_handler,
+        0x030f: record_030f_handler,
         0x031a: record_031a_handler,
         0x031b: record_031b_handler,
         0x031c: record_031c_handler,
