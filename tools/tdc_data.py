@@ -215,6 +215,26 @@ def record_031c_handler(value: bytes, sample_rate_sps: int | None) -> str:
 
     return f"{symbols.hex()}, {kd_info.hex()}"
 
+def record_0339_handler(value: bytes, sample_rate_sps: int | None) -> str:
+    assert len(value) == 1
+
+    event_idx: int = value[0]
+
+    info: str = f"{value.hex()}"
+
+    event_str: str = {
+        0x08: "SuperSpeed Host Connected",
+        0x09: "SuperSpeed Target Connected",
+        0x17: "SuperSpeed Target Disconnected",
+        0x22: "VBus Present",
+        0x2a: "PHY Error",
+    }.get(event_idx, "")
+
+    if event_str:
+        info += f" ({event_str})"
+
+    return info
+
 def record_033a_handler(value: bytes, sample_rate_sps: int | None) -> str:
     # LTSSM Transition
     assert len(value) == 2
@@ -263,6 +283,7 @@ def handle_block_0_record(record: TVRecord, sample_rate_sps: int | None) -> str:
         0x031a: record_031a_handler,
         0x031b: record_031b_handler,
         0x031c: record_031c_handler,
+        0x0339: record_0339_handler,
         0x033a: record_033a_handler,
     }
     handler = handlers.get(record.tag, record_default_handler)
