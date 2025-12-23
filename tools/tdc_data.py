@@ -268,6 +268,62 @@ def record_033a_handler(value: bytes, sample_rate_sps: int | None) -> str:
     new_state_str: str = states.get(new_state, f"0x{new_state:02X}")
     return f"{value.hex()} ({prev_state_str} -> {new_state_str})"
 
+def record_033e_handler(value: bytes, sample_rate_sps: int | None) -> str:
+    unk_033e: int = struct.unpack("<H", value)[0]
+
+    info: str = f"{unk_033e:#06x}"
+
+    speed_str: str = {
+        0x0001: "Manual or USB 2.0 Trigger",
+        0x0002: "USB3 Simple Trigger",
+        0x0003: "USB3 Complex Trigger, State 1",
+        0x0004: "USB3 Complex Timer Trigger, State 1",
+        0x0005: "USB3 5 Gbit Start Trigger, State 1",
+        0x0006: "USB3 5 Gbit Stop Trigger, State 1",
+        0x0007: "USB3 Trigger, State 1",
+        0x0008: "USB3 Trigger, State 1",
+        0x0009: "USB3 Trigger, State 1",
+        0x000a: "USB3 Trigger, State 1",
+        0x000b: "USB3 Trigger, State 1",
+        0x000c: "USB3 Trigger, State 1",
+        0x000d: "USB3 Trigger, State 1",
+        0x000e: "USB3 Trigger, State 1",
+        0x000f: "USB3 Trigger, State 1",
+    }.get(unk_033e, "")
+
+    if speed_str:
+        info += f" ({speed_str})"
+
+    return info
+
+def record_0341_handler(value: bytes, sample_rate_sps: int | None) -> str:
+    unk_0341: int = struct.unpack("<I", value)[0]
+
+    info: str = f"{unk_0341:#010x}"
+
+    speed_str: str = {
+        0x00000001: "Manual or USB 3.0 Trigger",
+        0x00000002: "USB2 Simple Trigger",
+        0x00000003: "USB2 Complex Trigger, State 1",
+        0x00000004: "USB2 Timer Trigger, State 1",
+        0x00000005: "USB2 Trigger, State 1",
+        0x00000006: "USB2 Trigger, State 1",
+        0x00000007: "USB2 Unknown Complex Trigger, State 1",
+        0x00000008: "USB2 Trigger, State 1",
+        0x00000009: "USB2 Trigger, State 1",
+        0x0000000a: "USB2 Trigger, State 1",
+        0x0000000b: "USB2 Trigger, State 1",
+        0x0000000c: "USB2 Trigger, State 1",
+        0x0000000d: "USB2 Trigger, State 1",
+        0x0000000e: "USB2 Trigger, State 1",
+        0x0000000f: "USB2 Trigger, State 1",
+    }.get(unk_0341, "")
+
+    if speed_str:
+        info += f" ({speed_str})"
+
+    return info
+
 def record_default_handler(value: bytes, sample_rate_sps: int | None) -> str:
     return value.hex()
 
@@ -285,6 +341,8 @@ def handle_block_0_record(record: TVRecord, sample_rate_sps: int | None) -> str:
         0x031c: record_031c_handler,
         0x0339: record_0339_handler,
         0x033a: record_033a_handler,
+        0x033e: record_033e_handler,
+        0x0341: record_0341_handler,
     }
     handler = handlers.get(record.tag, record_default_handler)
     formatted_value: str = handler(record.value, sample_rate_sps)
