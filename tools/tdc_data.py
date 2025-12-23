@@ -215,6 +215,19 @@ def record_031c_handler(value: bytes, sample_rate_sps: int | None) -> str:
 
     return f"{symbols.hex()}, {kd_info.hex()}"
 
+def record_031d_handler(value: bytes, sample_rate_sps: int | None) -> str:
+    assert len(value) == 4 + 20 + 3
+
+    data: Data = Data(value)
+
+    unk0: int = data.take_le(4)
+    symbols: bytes = data.take_bytes(20)
+    kd_info: bytes = data.take_bytes(3)
+
+    assert data.get_remaining() == 0
+
+    return f"{unk0:#010x}, {symbols.hex()}, {kd_info.hex()}"
+
 def record_0339_handler(value: bytes, sample_rate_sps: int | None) -> str:
     assert len(value) == 1
 
@@ -351,6 +364,7 @@ def handle_block_0_record(record: TVRecord, sample_rate_sps: int | None) -> str:
         0x031a: record_031a_handler,
         0x031b: record_031b_handler,
         0x031c: record_031c_handler,
+        0x031d: record_031d_handler,
         0x0339: record_0339_handler,
         0x033a: record_033a_handler,
         0x033b: record_033b_handler,
