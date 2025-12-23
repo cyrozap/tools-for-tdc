@@ -268,6 +268,18 @@ def record_033a_handler(value: bytes, sample_rate_sps: int | None) -> str:
     new_state_str: str = states.get(new_state, f"0x{new_state:02X}")
     return f"{value.hex()} ({prev_state_str} -> {new_state_str})"
 
+def record_033b_handler(value: bytes, sample_rate_sps: int | None) -> str:
+    assert len(value) == 5
+    count, set_type = struct.unpack("<IB", value)
+
+    type_string: str = {
+        0x18: "LFPS Polling",
+        0x19: "LFPS Ping",
+        0x1c: "LFPS Polling/U1 Exit",
+    }.get(set_type, f"Unknown {set_type:#04x}")
+
+    return f"{count} {type_string}"
+
 def record_033e_handler(value: bytes, sample_rate_sps: int | None) -> str:
     unk_033e: int = struct.unpack("<H", value)[0]
 
@@ -341,6 +353,7 @@ def handle_block_0_record(record: TVRecord, sample_rate_sps: int | None) -> str:
         0x031c: record_031c_handler,
         0x0339: record_0339_handler,
         0x033a: record_033a_handler,
+        0x033b: record_033b_handler,
         0x033e: record_033e_handler,
         0x0341: record_0341_handler,
     }
